@@ -144,7 +144,8 @@ open class DeepCopyIrTreeWithSymbols(
             declaration.isInner,
             declaration.isData,
             declaration.isExternal,
-            declaration.isInline
+            declaration.isInline,
+            declaration.isExpect
         ).apply {
             transformAnnotations(declaration)
             copyTypeParametersFrom(declaration)
@@ -164,10 +165,11 @@ open class DeepCopyIrTreeWithSymbols(
             declaration.visibility,
             declaration.modality,
             declaration.returnType,
-            declaration.isInline,
-            declaration.isExternal,
-            declaration.isTailrec,
-            declaration.isSuspend
+            isInline = declaration.isInline,
+            isExternal = declaration.isExternal,
+            isTailrec = declaration.isTailrec,
+            isSuspend = declaration.isSuspend,
+            isExpect = declaration.isExpect
         ).apply {
             declaration.overriddenSymbols.mapTo(overriddenSymbols) {
                 symbolRemapper.getReferencedFunction(it) as IrSimpleFunctionSymbol
@@ -183,9 +185,10 @@ open class DeepCopyIrTreeWithSymbols(
             declaration.name,
             declaration.visibility,
             declaration.returnType,
-            declaration.isInline,
-            declaration.isExternal,
-            declaration.isPrimary
+            isInline = declaration.isInline,
+            isExternal = declaration.isExternal,
+            isPrimary = declaration.isPrimary,
+            isExpect = declaration.isExpect
         ).apply {
             transformFunctionChildren(declaration)
         }

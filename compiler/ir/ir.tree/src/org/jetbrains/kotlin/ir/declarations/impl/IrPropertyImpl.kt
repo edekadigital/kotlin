@@ -40,6 +40,7 @@ class IrPropertyImpl(
     override val isConst: Boolean = symbol.descriptor.isConst,
     override val isLateinit: Boolean = symbol.descriptor.isLateInit,
     @Suppress("DEPRECATION") override val isDelegated: Boolean = symbol.descriptor.isDelegated,
+    override val isExpect: Boolean = symbol.descriptor.isExpect,
     override val isExternal: Boolean = symbol.descriptor.isEffectivelyExternal()
 ) : IrDeclarationBase(startOffset, endOffset, origin),
     IrProperty {
