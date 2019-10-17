@@ -20,7 +20,7 @@ class UtilsTest : TestCase() {
         assertPattern("a$pathSeparatorPattern$pathElementPattern\\.txt", "a/*.txt")
         assertPattern("a$pathSeparatorPattern.*${pathSeparatorPattern}b", "a/**/b")
         assertPattern("a${pathSeparatorPattern}b.\\.txt", "a/b?.txt")
-        assertPattern("$pathElementPattern/b\\.txt", "*/b.txt")
+        assertPattern("$pathElementPattern${pathSeparatorPattern}b\\.txt", "*/b.txt")
         assertPattern(".*${pathSeparatorPattern}b\\.txt", "**/b.txt")
     }
 
