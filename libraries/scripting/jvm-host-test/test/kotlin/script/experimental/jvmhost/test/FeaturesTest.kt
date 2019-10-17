@@ -22,8 +22,9 @@ class FeaturesTest : TestCase() {
             runBlocking {
                 val srcDir = File(TEST_DATA_DIR, "samWithReceiver")
                 val destDir = File(tempDir, "dest").also { it.mkdir() }
-                val files = srcDir.listFiles { file: File -> file.extension == "java" }
-                val javaRes = KotlinTestUtils.compileJavaFiles(files!!.toMutableList(), mutableListOf("-d", destDir.absolutePath))
+                val files = srcDir.listFiles { file: File -> file.extension == "java" }!!.toMutableList()
+                val args = mutableListOf("-d", destDir.absolutePath)
+                val javaRes = KotlinTestUtils.compileJavaFiles(files, args)
                 assertTrue(javaRes)
 
                 val baseConfig = ScriptCompilationConfiguration {
