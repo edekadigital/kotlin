@@ -58,6 +58,9 @@ val KotlinType.isFunctionType: Boolean
 val KotlinType.isSuspendFunctionType: Boolean
     get() = constructor.declarationDescriptor?.getFunctionalClassKind() == FunctionClassDescriptor.Kind.SuspendFunction
 
+val KotlinType.isKFunctionType: Boolean
+    get() = constructor.declarationDescriptor?.getFunctionalClassKind() == FunctionClassDescriptor.Kind.KFunction
+
 val KotlinType.isKSuspendFunctionType: Boolean
     get() = constructor.declarationDescriptor?.getFunctionalClassKind() == FunctionClassDescriptor.Kind.KSuspendFunction
 
@@ -137,6 +140,14 @@ fun KotlinType.getValueParameterTypesFromFunctionType(): List<TypeProjection> {
     val last = arguments.size - 1
     assert(first <= last) { "Not an exact function type: $this" }
     return arguments.subList(first, last)
+}
+
+fun KotlinType.getAllParameterTypesFromKFunctionType(): List<TypeProjection> {
+    assert(isKFunctionType) { "Not a KFunction type: $this" }
+    val arguments = arguments
+    val last = arguments.size - 1
+    assert(last >= 0) { "Not an exact function type: $this" }
+    return arguments.subList(0, last)
 }
 
 fun KotlinType.extractParameterNameFromFunctionTypeArgument(): Name? {
