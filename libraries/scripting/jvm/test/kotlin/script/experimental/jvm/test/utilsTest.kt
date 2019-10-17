@@ -84,7 +84,7 @@ class UtilsTest : TestCase() {
             rootDir.walkTopDown().filter {
                 it.relativeToOrSelf(rootDir).path.startsWith("src") && it.extension == "kt"
             }.mapTo(HashSet()) {
-                it.relativeToOrSelf(rootDir).path
+                it.relativeToOrSelf(rootDir).path.toUniversalSeparator()
             }
         assertEquals(allExpectedSrcKtFiles, allSrcKtFiles)
     }
