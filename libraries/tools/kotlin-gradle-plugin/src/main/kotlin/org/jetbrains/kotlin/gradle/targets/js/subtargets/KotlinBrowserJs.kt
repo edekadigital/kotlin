@@ -31,7 +31,7 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
     KotlinJsSubTarget(target, "browser"),
     KotlinJsBrowserDsl {
 
-    lateinit var dceTask: TaskProvider<KotlinJsDce>
+    private lateinit var dceContainer: KotlinJsDceContainer
 
     lateinit var buildVariants: NamedDomainObjectContainer<BuildVariant>
 
@@ -59,8 +59,8 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
         val project = compilation.target.project
         val nodeJs = NodeJsRootPlugin.apply(project.rootProject)
 
-        val dceTask = if (::dceTask.isInitialized) {
-            this.dceTask
+        val dceContainer = if (::dceContainer.isInitialized) {
+            this.dceContainer
         } else {
             configureDce(compilation)
         }
@@ -96,8 +96,9 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
 
                 when (kind) {
                     BuildVariantKind.RELEASE -> {
+                        it.entry = dceContainer.destinationDirProvider().resolve(compilation.compileKotlinTask.outputFile.name)
                         it.resolveFromModulesFirst = true
-                        it.dependsOn(dceTask)
+                        it.dependsOn(dceContainer.taskProvider)
                     }
                     BuildVariantKind.DEBUG -> {
                         it.dependsOn(compileKotlinTask)
@@ -112,8 +113,8 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
         val project = compilation.target.project
         val nodeJs = NodeJsRootPlugin.apply(project.rootProject)
 
-        val dceTask = if (::dceTask.isInitialized) {
-            this.dceTask
+        val dceContainer = if (::dceContainer.isInitialized) {
+            this.dceContainer
         } else {
             configureDce(compilation)
         }
@@ -140,8 +141,9 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
 
                 when (kind) {
                     BuildVariantKind.RELEASE -> {
+                        it.entry = dceContainer.destinationDirProvider().resolve(compilation.compileKotlinTask.outputFile.name)
                         it.resolveFromModulesFirst = true
-                        it.dependsOn(dceTask)
+                        it.dependsOn(dceContainer.taskProvider)
                         project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME).dependsOn(it)
                     }
                     BuildVariantKind.DEBUG -> {
@@ -152,7 +154,7 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
         }
     }
 
-    private fun configureDce(compilation: KotlinJsCompilation): TaskProvider<KotlinJsDce> {
+    private fun configureDce(compilation: KotlinJsCompilation): KotlinJsDceContainer {
         val project = compilation.target.project
 
         val dceTaskName = lowerCamelCaseName(
@@ -164,15 +166,30 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
 
         val kotlinTask = compilation.compileKotlinTask
 
+        val destinationDir = compilation.npmProject.dir
+            .resolve(DCE_DIR)
+
+        var destinationDirProvider: () -> File = { destinationDir }
+
         return project.registerTask<KotlinJsDce>(dceTaskName) {
             it.dependsOn(kotlinTask)
 
             it.classpath = project.configurations.getByName(compilation.compileDependencyConfigurationName)
-            it.destinationDir = it.dceOptions.outputDirectory?.let { File(it) }
-                ?: compilation.npmProject.dir.resolve(DCE_DIR)
+
+            destinationDirProvider = {
+                it.dceOptions.outputDirectory?.let { File(it) }
+                    ?: destinationDir
+            }
+
+            it.destinationDir = destinationDirProvider()
             it.source(kotlinTask.outputFile)
-        }.also {
-            dceTask = it
+        }.let {
+            KotlinJsDceContainer(
+                taskProvider = it,
+                destinationDirProvider = destinationDirProvider
+            ).also {
+                dceContainer = it
+            }
         }
     }
 
@@ -208,6 +225,13 @@ open class KotlinBrowserJs @Inject constructor(target: KotlinJsTarget) :
             it.kind = BuildVariantKind.DEBUG
         }
     }
+
+    private data class KotlinJsDceContainer(
+        val taskProvider: TaskProvider<KotlinJsDce>,
+        // Store DCE's destination dir provider instead of destination dir explicitly
+        // Useful because due to Task Configuration Avoidance we don't know final destinationDir of KotlinJsDce
+        val destinationDirProvider: () -> File
+    )
 
     companion object {
         const val DCE_TASK_PREFIX = "processDce"
