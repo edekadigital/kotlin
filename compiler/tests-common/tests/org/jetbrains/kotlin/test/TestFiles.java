@@ -49,7 +49,7 @@ public class TestFiles {
     @NotNull
     public static <M, F> List<F> createTestFiles(String testFileName, String expectedText, TestFileFactory<M, F> factory,
             boolean preserveLocations, String coroutinesPackage) {
-        Map<String, String> directives = parseDirectives(expectedText);
+        Map<String, String> directives = KotlinTestUtils.parseDirectives(expectedText);
 
         List<F> testFiles = Lists.newArrayList();
         Matcher matcher = FILE_OR_MODULE_PATTERN.matcher(expectedText);
