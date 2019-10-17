@@ -117,7 +117,8 @@ private class InterfaceDelegationLowering(val context: JvmBackendContext) : IrEl
                 isInline = classOverride.isInline,
                 isExternal = false,
                 isTailrec = false,
-                isSuspend = classOverride.isSuspend
+                isSuspend = classOverride.isSuspend,
+                isExpect = false
             ).apply {
                 descriptor.bind(this)
                 parent = irClass
